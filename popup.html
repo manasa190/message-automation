@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            width: 340px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #fff;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .tabs {
+            display: flex;
+            background: #F6CBC0;
+            /* Pastel Pink */
+            color: #333;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab:hover {
+            background: #E6BBB0;
+            /* Slightly darker pastel pink */
+        }
+
+        .tab.active {
+            background: #D6ABA0;
+            /* Active pastel pink */
+            border-bottom: 2px solid #333;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 15px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        h3,
+        h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #D6ABA0;
+            /* Pastel Pink heading */
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 4px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: Arial, sans-serif;
+        }
+
+        button {
+            background: #F6CBC0;
+            /* Pastel pink button */
+            color: #333;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #E6BBB0;
+            /* Hover darker pink */
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .danger {
+            background: #D6ABA0;
+            /* Darker pastel pink for stop button */
+        }
+
+        .danger:hover {
+            background: #C69B90;
+            /* Even darker pink on hover */
+        }
+
+        .success {
+            background: #F6CBC0;
+            /* Soft pastel pink */
+        }
+
+        .success:hover {
+            background: #E6BBB0;
+            /* Slightly darker pastel pink */
+        }
+
+        .stat-box {
+            display: flex;
+            justify-content: space-between;
+            background: #f3f2ef;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-item strong {
+            display: block;
+            font-size: 18px;
+            color: #D6ABA0;
+            /* Stat number pastel pink */
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        .checkbox-container input {
+            width: auto;
+            margin-right: 10px;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+
+        .checkbox-container label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="tabs">
+        <div class="tab active" data-target="home">Dashboard</div>
+        <div class="tab" data-target="settings">Settings</div>
+        <div class="tab" data-target="leads">Export CRM</div>
+    </div>
+
+    <div id="home" class="tab-content active">
+        <h3>Flare Technologies Bot</h3>
+        <p style="margin: 0 0 10px 0; font-size: 13px; color: #666;">Status: <strong id="statusText"
+                style="color: #d32f2f;">Idle</strong></p>
+
+        <div class="stat-box">
+            <div class="stat-item">
+                <strong id="connCount">0</strong>
+                Connections
+            </div>
+            <div class="stat-item">
+                <strong id="msgCount">0</strong>
+                Messages
+            </div>
+        </div>
+
+        <button id="startBtn">Start Lead Campaign</button>
+        <button id="stopBtn" class="danger">Stop Campaign</button>
+    </div>
+
+    <div id="settings" class="tab-content">
+        <h4>Configuration Panel</h4>
+
+        <label>Action Limit per Session</label>
+        <input type="number" id="limit" value="30" title="Safest is around 30. Max 100/day.">
+
+        <label>A/B Testing Message Templates</label>
+        <p style="font-size: 11px; color:#666; margin: 0 0 5px 0;">Separate templates with '///'. Use {firstName} and
+            {title}. The bot will randomly rotate them.</p>
+        <textarea id="templates" rows="5"></textarea>
+
+        <label>OpenAI AI Personalization (Optional)</label>
+        <p style="font-size: 11px; color:#666; margin: 0 0 5px 0;">Paste OpenAI Key to write custom messages based on
+            profile data.</p>
+        <input type="password" id="apiKey" placeholder="sk-...">
+
+        <div class="checkbox-container">
+            <input type="checkbox" id="softTouch">
+            <label for="softTouch"><strong>Enable Soft Touch Strategy:</strong> Bot will hover and view prospects longer
+                to trigger Profile View notifications.</label>
+        </div>
+
+        <button id="saveBtn">Save Configuration</button>
+    </div>
+
+    <div id="leads" class="tab-content">
+        <h4>Collected Leads (CRM)</h4>
+        <p style="font-size:13px; color: #555;">The bot automatically logs the individuals it connects with or messages
+            to a downloadable spreadsheet for your sales team.</p>
+
+        <div class="stat-box" style="margin-bottom: 15px;">
+            <div class="stat-item">
+                <strong id="leadCount">0</strong>
+                Total Recorded Leads
+            </div>
+        </div>
+
+        <button id="exportBtn" class="success">Export Leads to CSV</button>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,32 @@
+{
+    "manifest_version": 3,
+    "name": "LinkedIn Automation",
+    "version": "9.0",
+    "description": "Automate LinkedIn connections, follows, and messaging",
+    "permissions": [
+        "storage",
+        "tabs",
+        "activeTab"
+    ],
+    "host_permissions": [
+        "*://*.linkedin.com/*",
+        "https://api.openai.com/*"
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*.linkedin.com/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
+}
