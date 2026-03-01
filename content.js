@@ -650,7 +650,7 @@ async function processPeople() {
 async function runAutomation() {
     updatePanel('Starting...');
 
-    if (!window.location.href.includes('/search/results/')) {
+    if (!window.location.href.includes('/search/results/people')) {
         updatePanel('Navigating to search...');
         await navigateToSearch(keywords[currentKeywordIndex]);
         return;
