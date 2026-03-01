@@ -650,13 +650,14 @@ async function processPeople() {
 async function runAutomation() {
     updatePanel('Starting...');
 
+    // If we're not on the people search page, go there, but don't stop the script.
     if (!window.location.href.includes('/search/results/people')) {
         updatePanel('Navigating to search...');
         await navigateToSearch(keywords[currentKeywordIndex]);
+        // The script will reload when the new page loads, so we can return here.
         return;
     }
 
-    await sleep(5000);
     updatePanel('Scraping opportunities...');
 
     while (isRunning && (connectionsSent + messagesSent + followsSent) < MAX_ACTIONS) {
