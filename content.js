@@ -610,7 +610,7 @@ async function processPeople() {
                 await saveState();
                 nextBtn.click();
                 await sleep(5000);
-                return;
+                return false;
             }
 
             retryCount = 0;
@@ -620,7 +620,7 @@ async function processPeople() {
                 updatePanel('Moving to next keyword...');
                 await sleep(2000);
                 await navigateToSearch(keywords[currentKeywordIndex]);
-                return;
+                return false;
             } else {
                 await stopAutomation();
                 alert(`Enterprise Campaign Complete!\nLeads recorded: ${results.length}. Export from UI.`);
@@ -631,7 +631,7 @@ async function processPeople() {
         updatePanel(`Searching... (${retryCount}/${MAX_RETRIES})`);
         window.scrollBy(0, 800);
         await sleep(3000);
-        return;
+        return false;
     }
 
     retryCount = 0;
@@ -644,6 +644,8 @@ async function processPeople() {
         if (acted) await saveState();
         updatePanel();
     }
+
+    return true;
 }
 
 // Main loop
