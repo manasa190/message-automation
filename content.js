@@ -571,13 +571,6 @@ async function processPerson(person) {
             return false;
         }
 
-        // Active optimization: Explicitly skip 3rd+ degree connections to avoid premium paywall popups
-        const connectionDegreeEl = person.card.querySelector('.entity-result__badge-text, .image-text-lockup__text');
-        if (connectionDegreeEl && connectionDegreeEl.innerText.toLowerCase().includes('3rd')) {
-            console.log(`Skipping ${name} - 3rd Degree connection locked behind Premium.`);
-            return false;
-        }
-
         const title = extractJobTitle(person.card);
         const firstNameRaw = name.split(/[\s\n]+/)[0];
         const firstName = firstNameRaw.charAt(0).toUpperCase() + firstNameRaw.slice(1).toLowerCase();
