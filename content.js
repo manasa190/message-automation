@@ -13,34 +13,34 @@ let followsSent = 0;
 let results = [];
 let MAX_ACTIONS = 30; // Total actions limit
 let keywords = [
-    '"AI integration" AND "digital transformation"',
-    '"generative AI" AND "business operations"',
-    '"implementing machine learning" AND "AI consultant"',
-    '"predictive analytics" AND "enterprise data"',
-    '"AI solutions" AND "reduce costs"',
-    '"cloud migration" AND "cloud architecture"',
-    '"AWS consulting" AND "Azure architect"',
-    '"DevOps automation" AND "managed IT services"',
-    '"cybersecurity solutions" AND "database optimization"',
-    '"infrastructure as a service" AND "enterprise"',
-    '"Looking for developers" AND "need tech help"',
-    '"hire app developer" AND "hiring full stack"',
-    '"outsourcing development" AND "IT consulting"',
-    '"tech staff augmentation" AND "hiring IT contractors"',
-    '"need CTO" AND "looking for tech partner"',
-    '"software engineering team" AND "scale"',
-    '"Marketing automation" AND "ad performance"',
-    '"digital marketing agency" AND "brand strategy"',
-    '"hiring growth marketer" AND "PPC expert needed"',
-    '"ecommerce growth" AND "conversion rate optimization"',
-    '"B2B lead generation" AND "marketing team"',
-    '"influencer marketing campaign" AND "social media ambassador"',
-    '"creator economy" AND "brand partnerships"',
-    '"Growing startup" AND "scaling product"',
-    '"digital agency" AND "seeking tech partner"',
-    '"startup funding" AND "hiring engineers"',
-    '"tech modernization" AND "enterprise"',
-    '"seeking technology partner" AND "IT vendor"'
+    '"AI integration" OR "digital transformation"',
+    '"generative AI" OR "business operations"',
+    '"implementing machine learning" OR "AI consultant"',
+    '"predictive analytics" OR "enterprise data"',
+    '"AI solutions" OR "reduce costs"',
+    '"cloud migration" OR "cloud architecture"',
+    '"AWS consulting" OR "Azure architect"',
+    '"DevOps automation" OR "managed IT services"',
+    '"cybersecurity solutions" OR "database optimization"',
+    '"infrastructure as a service" OR "enterprise"',
+    '"Looking for developers" OR "need tech help"',
+    '"hire app developer" OR "hiring full stack"',
+    '"outsourcing development" OR "IT consulting"',
+    '"tech staff augmentation" OR "hiring IT contractors"',
+    '"need CTO" OR "looking for tech partner"',
+    '"software engineering team" OR "scale"',
+    '"Marketing automation" OR "ad performance"',
+    '"digital marketing agency" OR "brand strategy"',
+    '"hiring growth marketer" OR "PPC expert needed"',
+    '"ecommerce growth" OR "conversion rate optimization"',
+    '"B2B lead generation" OR "marketing team"',
+    '"influencer marketing campaign" OR "social media ambassador"',
+    '"creator economy" OR "brand partnerships"',
+    '"Growing startup" OR "scaling product"',
+    '"digital agency" OR "seeking tech partner"',
+    '"startup funding" OR "hiring engineers"',
+    '"tech modernization" OR "enterprise"',
+    '"seeking technology partner" OR "IT vendor"'
 ];
 let currentKeywordIndex = 0;
 let retryCount = 0;
@@ -152,7 +152,7 @@ function injectPanel() {
     <div style="font-size: 13px; line-height: 1.6;">
       <div><strong>Keyword:</strong> <span id="auto-keyword">None</span></div>
       <div><strong>Actions:</strong> <span id="auto-total">0</span>/${MAX_ACTIONS}</div>
-      <div style="margin-top:5px; font-size:11px; color:#ffeb3b;"><strong>Status:</strong> <span id="auto-status">Idle</span></div>
+      <div style="margin-top:5px; font-size:11px; color:#333;"><strong>Status:</strong> <span id="auto-status">Idle</span></div>
     </div>
     <div style="margin-top: 15px; max-height: 200px; overflow-y: auto; background: rgba(255,255,255,0.1); border-radius: 5px; padding: 10px;">
       <strong style="font-size: 12px;">Recent CRM Leads:</strong>
@@ -274,89 +274,110 @@ function extractJobTitle(card) {
 
 // Write React Input
 function triggerReactInput(element, value) {
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
-    const nativeContentEditableSetter = Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, "innerText").set;
+    if (!element) return;
 
+    element.focus();
     if (element.tagName === "TEXTAREA" || element.tagName === "INPUT") {
+        const proto = element.tagName === "TEXTAREA" ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(proto, "value").set;
         nativeInputValueSetter.call(element, value);
         element.dispatchEvent(new Event('input', { bubbles: true }));
         element.dispatchEvent(new Event('change', { bubbles: true }));
     } else {
+        // For contenteditable in Draft.js or lexical
         document.execCommand('selectAll', false, null);
         document.execCommand('delete', false, null);
-        const lines = value.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            if (i > 0) document.execCommand('insertLineBreak', false, null);
-            if (lines[i].length > 0) document.execCommand('insertText', false, lines[i]);
-        }
-        element.dispatchEvent(new Event('input', { bubbles: true }));
+        document.execCommand('insertText', false, value);
+        element.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
     }
 }
 
 // Handle Connect button
 async function handleConnect(connectBtn, name, firstName, title) {
     try {
+        console.log(`[Connect] Clicking connect for ${firstName}...`);
         connectBtn.click();
-        await sleep(2000);
+        await sleep(2500);
 
-        // Check for 'How do you know this person?' modal
-        const otherBtn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Other'));
+        // Handle possible "How do you know this person?" modal
+        const otherBtn = Array.from(document.querySelectorAll('button')).find(b => (b.innerText || '').toLowerCase().includes('other'));
         if (otherBtn) {
+            console.log(`[Connect] Answering 'Other' to connection prompt...`);
             otherBtn.click();
             await sleep(1000);
-            const subConnectBtn = Array.from(document.querySelectorAll('button')).find(b => b.innerText === 'Connect');
+            const subConnectBtn = Array.from(document.querySelectorAll('button')).find(b => (b.innerText || '').trim().toLowerCase() === 'connect');
             if (subConnectBtn) subConnectBtn.click();
-            await sleep(1000);
+            await sleep(1500);
         }
 
-        const addNoteBtn = document.querySelector('button[aria-label="Add a note"]') || Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Add a note'));
+        const addNoteBtn = document.querySelector('button[aria-label="Add a note"]') ||
+            Array.from(document.querySelectorAll('button')).find(b => (b.innerText || '').toLowerCase().includes('add a note'));
 
         let generatedMessage = "Fallback";
 
         if (addNoteBtn) {
+            console.log(`[Connect] Adding a note...`);
             addNoteBtn.click();
-            await sleep(1000);
+            await sleep(1500);
 
-            const textarea = document.querySelector('textarea[name="message"]') || document.querySelector('textarea');
+            const textarea = document.querySelector('textarea[name="message"], textarea#custom-message') || document.querySelector('textarea');
             if (textarea) {
                 const messageData = await getMessageTemplate(firstName, title);
                 generatedMessage = messageData.type;
                 textarea.focus();
 
                 triggerReactInput(textarea, messageData.msg);
-                await sleep(1000);
+                await sleep(1500);
 
                 const sendBtn = document.querySelector('button[aria-label*="Send"]') ||
-                    Array.from(document.querySelectorAll('button')).find(b => (b.innerText || '').includes('Send') && !(b.innerText || '').includes('without'));
+                    Array.from(document.querySelectorAll('button')).find(b => {
+                        const t = (b.innerText || '').trim().toLowerCase();
+                        return (t.includes('send') && !t.includes('without')) || t === 'send';
+                    });
 
                 if (sendBtn) {
                     sendBtn.removeAttribute('disabled');
                     sendBtn.click();
                     connectionsSent++;
+                    console.log(`[Connect] Note sent successfully.`);
                     return { status: 'connected_with_note', template: generatedMessage };
+                } else {
+                    console.log(`[Connect] Warning: Could not find 'Send' button after typing note.`);
                 }
+            } else {
+                console.log(`[Connect] Warning: Could not find textarea for note.`);
             }
         } else {
-            const sendBtn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.trim() === 'Send' || b.innerText.trim() === 'Send now');
+            console.log(`[Connect] No 'Add a note' button. Trying to send directly...`);
+            const sendBtn = Array.from(document.querySelectorAll('button')).find(b => {
+                const t = (b.innerText || '').toLowerCase();
+                return t === 'send' || t === 'send now' || t.includes('send without a note') || t === 'connect';
+            });
             if (sendBtn) {
                 sendBtn.click();
                 connectionsSent++;
+                console.log(`[Connect] Sent direct connection.`);
                 return { status: 'connected', template: 'No Note Option' };
             }
         }
 
+        console.log(`[Connect] Failure trying to find final action buttons. Dismissing modal...`);
         const closeBtn = document.querySelector('button[aria-label="Dismiss"]') ||
             Array.from(document.querySelectorAll('button')).find(b => b.querySelector('[data-test-icon="close-medium"]'));
         if (closeBtn) closeBtn.click();
         return null;
-    } catch (e) { console.error("Error connecting:", e); return null; }
+    } catch (e) {
+        console.error("Error connecting:", e);
+        return null;
+    }
 }
 
 // Handle Message button
 async function handleMessage(messageBtn, name, firstName, title) {
     try {
+        console.log(`[Message] Clicking message for ${firstName}...`);
         messageBtn.click();
-        await sleep(3000);
+        await sleep(3500);
 
         let messageBox = document.querySelector('.msg-form__contenteditable[contenteditable="true"]') ||
             document.querySelector('.msg-form__msg-content-container [contenteditable="true"]');
@@ -365,10 +386,11 @@ async function handleMessage(messageBtn, name, firstName, title) {
 
         if (!messageBox) {
             messageBox = Array.from(document.querySelectorAll('[contenteditable="true"]'))
-                .find(el => el.getAttribute('aria-label')?.includes('message'));
+                .find(el => (el.getAttribute('aria-label') || '').toLowerCase().includes('message'));
         }
 
         if (messageBox) {
+            console.log(`[Message] Message box found. Generating AI output...`);
             const messageData = await getMessageTemplate(firstName, title);
             generatedMessage = messageData.type;
 
@@ -378,27 +400,47 @@ async function handleMessage(messageBtn, name, firstName, title) {
 
             const sendBtn = document.querySelector('button.msg-form__send-button') ||
                 document.querySelector('button[type="submit"]') ||
-                Array.from(document.querySelectorAll('button')).find(b => (b.innerText || '').trim() === 'Send' || (b.innerText || '').trim() === 'Send now');
+                Array.from(document.querySelectorAll('button')).find(b => {
+                    const t = (b.innerText || '').trim().toLowerCase();
+                    return t === 'send' || t === 'send now';
+                });
 
             if (sendBtn) {
                 sendBtn.removeAttribute('disabled');
                 sendBtn.click();
-                messagesSent++;
-                await sleep(1000);
 
-                const closeBtn = document.querySelector('button[aria-label="Dismiss"]') || document.querySelector('.msg-overlay-bubble-header__control--close-btn');
-                if (closeBtn) closeBtn.click();
+                // Secondary check: Did it really send? If disabled is still active, React blocked it.
+                // Let's forcibly click with a mouse event
+                const mouseEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: true });
+                sendBtn.dispatchEvent(mouseEvent);
+
+                messagesSent++;
+                console.log(`[Message] Sent successfully.`);
+                await sleep(1500);
+
+                const closeBtns = document.querySelectorAll('button[aria-label="Dismiss"], .msg-overlay-bubble-header__control--close-btn');
+                if (closeBtns.length > 0) closeBtns[0].click();
 
                 return { status: 'messaged', template: generatedMessage };
+            } else {
+                console.log(`[Message] Warning: Could not find Send button. Trying Enter key.`);
+                // Send by pressing Enter as a fallback
+                const enterEvent = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter', code: 'Enter', keyCode: 13 });
+                messageBox.dispatchEvent(enterEvent);
+                messagesSent++;
+                await sleep(1500);
+                return { status: 'messaged', template: generatedMessage + " (Enter Key)" };
             }
+        } else {
+            console.log(`[Message] Warning: Could not find contenteditable message box.`);
         }
 
-        const closeBtn = document.querySelector('button[aria-label="Dismiss"]') || document.querySelector('.msg-overlay-bubble-header__control--close-btn');
-        if (closeBtn) closeBtn.click();
+        const closeBtns = document.querySelectorAll('button[aria-label="Dismiss"], .msg-overlay-bubble-header__control--close-btn');
+        if (closeBtns.length > 0) closeBtns[0].click();
         return null;
     } catch (e) {
-        const closeBtn = document.querySelector('button[aria-label="Dismiss"]') || document.querySelector('.msg-overlay-bubble-header__control--close-btn');
-        if (closeBtn) closeBtn.click();
+        const closeBtns = document.querySelectorAll('button[aria-label="Dismiss"], .msg-overlay-bubble-header__control--close-btn');
+        if (closeBtns.length > 0) closeBtns[0].click();
         console.error("Error messaging:", e);
         return null;
     }
@@ -409,8 +451,16 @@ async function processPerson(person) {
     try {
         person.card.setAttribute('data-auto-processed', 'true');
         const name = extractName(person.card);
+
+        // Skip hidden profiles to prevent "Hi LinkedIn" messages
+        if (name === 'LinkedIn Member' || name.startsWith('LinkedIn')) {
+            console.log("Skipping hidden profile...");
+            return false;
+        }
+
         const title = extractJobTitle(person.card);
-        const firstName = name.split(' ')[0];
+        const firstNameRaw = name.split(/[\s\n]+/)[0];
+        const firstName = firstNameRaw.charAt(0).toUpperCase() + firstNameRaw.slice(1).toLowerCase();
 
         // SOFT TOUCH FEATURE
         if (config.softTouch && person.profileLink) {

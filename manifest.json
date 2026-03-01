@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "LinkedIn Automation",
-    "version": "9.0",
+    "version": "9.1",
     "description": "Automate LinkedIn connections, follows, and messaging",
     "permissions": [
         "storage",

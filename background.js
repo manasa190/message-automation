@@ -1,6 +1,6 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'generateAI') {
-        const prompt = `Write a short, engaging LinkedIn connection request note (max 280 chars) for a person named ${request.firstName} with the job title "${request.title}". We are Flare Technologies, offering AI, Cloud, and Digital Marketing enterprise consulting. Do not include placeholders, use their name. Keep it casual and professional. No hashtags.`;
+        const prompt = `Write a short, engaging LinkedIn connection request note (max 250 chars) for a person named ${request.firstName} with the job title "${request.title}". We are Flare Technologies, offering AI, Cloud, and Digital Marketing enterprise consulting. Do not use placeholders. Be casual and professional. No hashtags.`;
 
         fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -9,7 +9,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 'Authorization': `Bearer ${request.apiKey}`
             },
             body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
+                model: 'gpt-4o-mini',
                 messages: [{ role: 'user', content: prompt }],
                 max_tokens: 80,
                 temperature: 0.7

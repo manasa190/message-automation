@@ -30,6 +30,7 @@ content = content.replace('#ffb6c1', '#F6CBC0')
 content = content.replace('#ff8ca3', '#D6ABA0')
 content = content.replace('color: white;', 'color: #333;')
 content = content.replace('color:#fff;', 'color:#333;')
+content = content.replace('color:#ffeb3b;', 'color:#333;')
 content = content.replace('border-bottom: 1px solid #fff;', 'border-bottom: 1px solid #333;')
 
 content = content.replace('🌸 Flare Enterprise Bot 🌸', '🚀 Flare Enterprise Bot')
@@ -41,7 +42,7 @@ with open(content_path, 'w', encoding='utf-8') as f:
 with open(manifest_path, 'r', encoding='utf-8') as f:
     manifest = f.read()
 
-manifest = re.sub(r'"version": "\d+\.\d+"', '"version": "9.0"', manifest)
+manifest = re.sub(r'"version": "\d+\.\d+"', '"version": "9.1"', manifest)
 
 with open(manifest_path, 'w', encoding='utf-8') as f:
     f.write(manifest)
