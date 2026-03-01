@@ -283,13 +283,26 @@ function triggerReactInput(element, value) {
         nativeInputValueSetter.call(element, value);
         element.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
         element.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
-        // Some React versions listen to keyup/keydown for length validations
         element.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'a' }));
         element.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'a' }));
     } else {
-        // For contenteditable in Draft.js or lexical
+        // For contenteditable in Draft.js or lexical (LinkedIn's message boxes)
+        element.focus();
         document.execCommand('selectAll', false, null);
         document.execCommand('delete', false, null);
+
+        // Modern editors intercept paste events to populate their internal state trees
+        const dataTransfer = new DataTransfer();
+        dataTransfer.setData('text/plain', value);
+        const pasteEvent = new ClipboardEvent('paste', {
+            clipboardData: dataTransfer,
+            bubbles: true,
+            cancelable: true
+        });
+
+        element.dispatchEvent(pasteEvent);
+
+        // Fallback for older editors
         document.execCommand('insertText', false, value);
         element.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
         element.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'a' }));
