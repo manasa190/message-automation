@@ -48,6 +48,30 @@ const MAX_RETRIES = 5;
 
 let config = { templates: "", apiKey: "", limit: 30, softTouch: false };
 
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'local' && changes.state) {
+        const oldState = changes.state.oldValue || {};
+        const newState = changes.state.newValue || {};
+
+        isRunning = newState.isRunning || false;
+        connectionsSent = newState.connectionsSent || 0;
+        messagesSent = newState.messagesSent || 0;
+        followsSent = newState.followsSent || 0;
+        results = newState.results || [];
+        currentKeywordIndex = newState.currentKeywordIndex || 0;
+        if (newState.keywords) keywords = newState.keywords;
+
+        updatePanel();
+
+        // If it was just toggled ON from the popup
+        if (isRunning && !oldState.isRunning) {
+            runAutomation();
+        } else if (!isRunning && oldState.isRunning) {
+            stopAutomation();
+        }
+    }
+});
+
 // Load state from local storage so that automation persists across page reloads
 async function loadState() {
     return new Promise(resolve => {
