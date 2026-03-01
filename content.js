@@ -142,8 +142,17 @@ async function getMessageTemplate(firstName, title) {
         }
     }
 
-    // 3. Ultimate fallback
-    return { msg: `Hi ${firstName}, at Flare Technologies we help enterprises scale with AI, cloud architecture, and marketing. Let's connect!`, type: "Fallback" };
+    // 3. Ultimate fallbacks based dynamically on Flare Technologies Services:
+    const flareTemplates = [
+        `Hi ${firstName}, I'm with Flare Technologies. I see you're an expert in the space. We help businesses scale with custom IT infrastructures and cloud migrations. I'd love to connect and share some of our recent work.`,
+        `Hi ${firstName}! I work with Flare Technologies. We partner with growing companies to build data-driven digital marketing and branding campaigns that actually convert. Let's connect!`,
+        `Hi ${firstName}, impressive background! At Flare Technologies, we provide agile IT and marketing staff augmentation. If you ever need to scale your team quickly without the overhead, I'd love to be in your network.`,
+        `Hi ${firstName}! Our team at Flare Technologies specializes in finding authentic Influencer Marketing partnerships for B2B and B2C brands. Let's connect, I'd love to hear what you are working on.`
+    ];
+
+    const randomFlare = flareTemplates[Math.floor(Math.random() * flareTemplates.length)];
+
+    return { msg: randomFlare, type: "Flare Fallback" };
 }
 
 // Inject the floating panel into the page

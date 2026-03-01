@@ -1,6 +1,11 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'generateAI') {
-        const prompt = `Write a short, engaging LinkedIn connection request note (max 250 chars) for a person named ${request.firstName} with the job title "${request.title}". We are Flare Technologies, offering AI, Cloud, and Digital Marketing enterprise consulting. Do not use placeholders. Be casual and professional. No hashtags.`;
+        const prompt = `Write a short, engaging LinkedIn connection request note (max 250 chars) for a person named ${request.firstName} with the job title "${request.title}". We are Flare Technologies. We offer 4 main services:
+1) Digital Marketing & Branding
+2) IT & Cloud Solutions (Migrations, DevOps)
+3) Influencer Marketing
+4) Staff Augmentation (Tech & Marketing)
+Base your pitch on the service most relevant to their job title. If unsure, pitch our IT Cloud or Staffing services. Do not use placeholders like [Your Name]. Be casual and professional. No hashtags.`;
 
         fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
