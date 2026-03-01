@@ -277,21 +277,38 @@ function triggerReactInput(element, value) {
     if (!element) return;
 
     element.focus();
+
+    // Method 1: React native value setters (for <textarea> or <input>)
     if (element.tagName === "TEXTAREA" || element.tagName === "INPUT") {
-        const proto = element.tagName === "TEXTAREA" ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(proto, "value").set;
-        nativeInputValueSetter.call(element, value);
+        let nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+        if (element.tagName === "INPUT") {
+            nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+        }
+
+        const prototypeValueSetter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(element), 'value')?.set;
+        if (prototypeValueSetter && prototypeValueSetter !== nativeInputValueSetter) {
+            prototypeValueSetter.call(element, value);
+        } else if (nativeInputValueSetter) {
+            nativeInputValueSetter.call(element, value);
+        } else {
+            element.value = value;
+        }
+
         element.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
         element.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
-        element.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'a' }));
-        element.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'a' }));
+
     } else {
-        // For contenteditable in Draft.js or lexical (LinkedIn's message boxes)
+        // Method 2: contenteditable for Lexical / Draft.js
         element.focus();
+
         document.execCommand('selectAll', false, null);
         document.execCommand('delete', false, null);
 
-        // Modern editors intercept paste events to populate their internal state trees
+        if (!document.execCommand('insertText', false, value)) {
+            element.textContent = value;
+        }
+
+        // Modern editors (Lexical) intercept paste events to populate state
         const dataTransfer = new DataTransfer();
         dataTransfer.setData('text/plain', value);
         const pasteEvent = new ClipboardEvent('paste', {
@@ -299,13 +316,16 @@ function triggerReactInput(element, value) {
             bubbles: true,
             cancelable: true
         });
-
         element.dispatchEvent(pasteEvent);
 
-        // Fallback for older editors
-        document.execCommand('insertText', false, value);
+        // Trigger generic input observers
         element.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
-        element.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'a' }));
+
+        // Trigger React debounce keyboard listeners with a simulated space at the end
+        const keyOpts = { key: ' ', code: 'Space', charCode: 32, keyCode: 32, bubbles: true, cancelable: true };
+        element.dispatchEvent(new KeyboardEvent('keydown', keyOpts));
+        element.dispatchEvent(new KeyboardEvent('keypress', keyOpts));
+        element.dispatchEvent(new KeyboardEvent('keyup', keyOpts));
     }
 }
 
@@ -362,6 +382,10 @@ async function handleConnect(connectBtn, name, firstName, title) {
                     const mouseEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: true });
                     sendBtn.dispatchEvent(mouseEvent);
 
+                    // NEW FALLBACK: Press enter on the button
+                    sendBtn.focus();
+                    sendBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true, cancelable: true }));
+
                     connectionsSent++;
                     console.log(`[Connect] Note sent successfully.`);
                     return { status: 'connected_with_note', template: generatedMessage };
@@ -379,6 +403,10 @@ async function handleConnect(connectBtn, name, firstName, title) {
             });
             if (sendBtn) {
                 sendBtn.click();
+
+                sendBtn.focus();
+                sendBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true, cancelable: true }));
+
                 connectionsSent++;
                 console.log(`[Connect] Sent direct connection.`);
                 return { status: 'connected', template: 'No Note Option' };
