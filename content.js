@@ -690,7 +690,26 @@ async function processPeople() {
         if (!isRunning || totalActions >= MAX_ACTIONS) break;
 
         const acted = await processPerson(person);
-        if (acted) await saveState();
+        if (acted) {
+            await saveState();
+
+            const currentTotal = connectionsSent + messagesSent + followsSent;
+
+            // Advance Human-Rhythm Scheduler & Ban Evasion
+            if (currentTotal > 0 && currentTotal % 15 === 0) {
+                updatePanel('Lunch Break (10-15m)...');
+                console.log(`[Rhythm] Taking a lunch break to mimic human behavior...`);
+                await randomSleep(10 * 60000, 15 * 60000);
+            } else if (currentTotal > 0 && currentTotal % 5 === 0) {
+                updatePanel('Coffee Break (3-5m)...');
+                console.log(`[Rhythm] Taking a coffee break to mimic human behavior...`);
+                await randomSleep(3 * 60000, 5 * 60000);
+            } else {
+                updatePanel('Human pause (30-60s)...');
+                console.log(`[Rhythm] Simulating human typing pause...`);
+                await randomSleep(30000, 60000);
+            }
+        }
         updatePanel();
     }
 
