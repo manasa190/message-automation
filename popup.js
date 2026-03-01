@@ -94,36 +94,33 @@ Thanks for connecting, {firstName}! From enterprise tech consulting and AI/cloud
             state.followsSent = 0;
             state.results = [];
 
-            // Expanded enterprise keywords list
+            // Expanded enterprise keywords list targeting actual buyers/decision makers
             state.keywords = [
-                '"AI integration" OR "digital transformation"',
-                '"generative AI" OR "business operations"',
-                '"implementing machine learning" OR "AI consultant"',
-                '"predictive analytics" OR "enterprise data"',
-                '"AI solutions" OR "reduce costs"',
-                '"cloud migration" OR "cloud architecture"',
-                '"AWS consulting" OR "Azure architect"',
-                '"DevOps automation" OR "managed IT services"',
-                '"cybersecurity solutions" OR "database optimization"',
-                '"infrastructure as a service" OR "enterprise"',
-                '"Looking for developers" OR "need tech help"',
-                '"hire app developer" OR "hiring full stack"',
-                '"outsourcing development" OR "IT consulting"',
-                '"tech staff augmentation" OR "hiring IT contractors"',
-                '"need CTO" OR "looking for tech partner"',
-                '"software engineering team" OR "scale"',
-                '"Marketing automation" OR "ad performance"',
-                '"digital marketing agency" OR "brand strategy"',
-                '"hiring growth marketer" OR "PPC expert needed"',
-                '"ecommerce growth" OR "conversion rate optimization"',
-                '"B2B lead generation" OR "marketing team"',
-                '"influencer marketing campaign" OR "social media ambassador"',
-                '"creator economy" OR "brand partnerships"',
-                '"Growing startup" OR "scaling product"',
-                '"digital agency" OR "seeking tech partner"',
-                '"startup funding" OR "hiring engineers"',
-                '"tech modernization" OR "enterprise"',
-                '"seeking technology partner" OR "IT vendor"'
+                // IT & Cloud Target Buyers
+                '"Chief Technology Officer" OR "CTO"',
+                '"VP of Engineering" OR "Director of Engineering"',
+                '"Director of IT Infrastructure" OR "Cloud Architect"',
+                '"Head of IT" OR "VP of Information Technology"',
+                '"Head of DevOps" OR "Director of Cloud Strategy"',
+
+                // Digital Marketing & Branding Target Buyers
+                '"Chief Marketing Officer" OR "CMO"',
+                '"VP of Marketing" OR "Director of Marketing"',
+                '"Head of Demand Generation" OR "VP of Growth"',
+                '"Brand Director" OR "Head of Brand Strategy"',
+                '"Director of Digital Marketing" OR "VP Digital Marketing"',
+
+                // Content & Influencer Marketing Target Buyers
+                '"Director of Influencer Marketing" OR "Head of Influencer Marketing"',
+                '"Director of Social Media" OR "Head of Culture"',
+                '"VP of Communications" OR "Head of Partnerships"',
+
+                // Staff Augmentation Target Buyers
+                '"Head of Talent Acquisition" OR "VP of Talent"',
+                '"Technical Recruiter" OR "Director of Technical Recruiting"',
+                '"Founder" OR "Co-founder" OR "CEO"',
+                '"Chief Operating Officer" OR "COO"',
+                '"Director of HR" OR "VP of Human Resources"'
             ];
 
             chrome.storage.local.set({ state }, () => {
