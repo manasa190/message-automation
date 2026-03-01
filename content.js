@@ -485,8 +485,20 @@ async function handleMessage(messageBtn, name, firstName, title) {
         messageBtn.click();
         await sleep(3500);
 
-        let overlays = document.querySelectorAll('.msg-overlay-conversation-bubble');
+        let overlays = document.querySelectorAll('.msg-overlay-conversation-bubble, .artdeco-modal, [role="dialog"]');
         let activeOverlay = overlays[overlays.length - 1] || document;
+
+        // Premium InMail: Fill Subject if it exists
+        let subjectBox = activeOverlay.querySelector('input[name="subject"]') ||
+            activeOverlay.querySelector('input[placeholder*="Subject" i]') ||
+            activeOverlay.querySelector('input[placeholder*="subject" i]');
+
+        if (subjectBox && (!subjectBox.value || subjectBox.value.trim() === '')) {
+            console.log(`[Message] Premium InMail detected. Filling subject...`);
+            let subjectLine = `Interested in exploring synergies`;
+            triggerReactInput(subjectBox, subjectLine);
+            await sleep(1000);
+        }
 
         let messageBox = activeOverlay.querySelector('.msg-form__contenteditable[contenteditable="true"]') ||
             activeOverlay.querySelector('.msg-form__msg-content-container [contenteditable="true"]');
@@ -496,6 +508,13 @@ async function handleMessage(messageBtn, name, firstName, title) {
         if (!messageBox) {
             messageBox = Array.from(activeOverlay.querySelectorAll('[contenteditable="true"]'))
                 .find(el => (el.getAttribute('aria-label') || '').toLowerCase().includes('message'));
+        }
+
+        // Premium InMail Fallback: often uses a standard textarea
+        if (!messageBox) {
+            messageBox = activeOverlay.querySelector('textarea[name="message"]') ||
+                activeOverlay.querySelector('textarea#custom-message') ||
+                activeOverlay.querySelector('textarea');
         }
 
         if (messageBox) {
@@ -527,7 +546,7 @@ async function handleMessage(messageBtn, name, firstName, title) {
                 console.log(`[Message] Sent successfully.`);
                 await sleep(1500);
 
-                const closeBtns = activeOverlay.querySelectorAll('button[aria-label="Dismiss"], .msg-overlay-bubble-header__control--close-btn');
+                const closeBtns = activeOverlay.querySelectorAll('button[aria-label="Dismiss"], button[aria-label="Close"], .msg-overlay-bubble-header__control--close-btn, .artdeco-modal__dismiss');
                 if (closeBtns.length > 0) closeBtns[0].click();
 
                 return { status: 'messaged', template: generatedMessage };
@@ -539,7 +558,7 @@ async function handleMessage(messageBtn, name, firstName, title) {
                 messagesSent++;
                 await sleep(1500);
 
-                const closeBtns = activeOverlay.querySelectorAll('button[aria-label="Dismiss"], .msg-overlay-bubble-header__control--close-btn');
+                const closeBtns = activeOverlay.querySelectorAll('button[aria-label="Dismiss"], button[aria-label="Close"], .msg-overlay-bubble-header__control--close-btn, .artdeco-modal__dismiss');
                 if (closeBtns.length > 0) closeBtns[0].click();
 
                 return { status: 'messaged', template: generatedMessage + " (Enter Key)" };
@@ -548,11 +567,11 @@ async function handleMessage(messageBtn, name, firstName, title) {
             console.log(`[Message] Warning: Could not find contenteditable message box.`);
         }
 
-        const closeBtns = activeOverlay.querySelectorAll('button[aria-label="Dismiss"], .msg-overlay-bubble-header__control--close-btn');
+        const closeBtns = activeOverlay.querySelectorAll('button[aria-label="Dismiss"], button[aria-label="Close"], .msg-overlay-bubble-header__control--close-btn, .artdeco-modal__dismiss');
         if (closeBtns.length > 0) closeBtns[0].click();
         return null;
     } catch (e) {
-        const closeBtns = document.querySelectorAll('button[aria-label="Dismiss"], .msg-overlay-bubble-header__control--close-btn');
+        const closeBtns = document.querySelectorAll('button[aria-label="Dismiss"], button[aria-label="Close"], .msg-overlay-bubble-header__control--close-btn, .artdeco-modal__dismiss');
         if (closeBtns.length > 0) closeBtns[0].click();
         console.error("Error messaging:", e);
         return null;
