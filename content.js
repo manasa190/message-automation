@@ -171,6 +171,7 @@ function injectPanel() {
     panel.innerHTML = `
     <h3 style="margin-top:0; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 18px;">Flare Enterprise Bot</h3>
     <div style="display:flex; gap:10px; margin-bottom: 15px;">
+        <button id="auto-start-btn" style="flex:1; padding:8px; border:none; border-radius:5px; background:#4CAF50; color:#fff; font-weight:bold; cursor:pointer; display:none;">Start Campaign</button>
         <button id="auto-stop-btn" style="flex:1; padding:8px; border:none; border-radius:5px; background:#D6ABA0; color:#333; font-weight:bold; cursor:pointer;">Stop Campaign</button>
     </div>
     <div style="font-size: 13px; line-height: 1.6;">
@@ -187,6 +188,13 @@ function injectPanel() {
     document.body.appendChild(panel);
 
     document.getElementById('auto-stop-btn').addEventListener('click', stopAutomation);
+    document.getElementById('auto-start-btn').addEventListener('click', async () => {
+        // Toggle states
+        isRunning = true;
+        await saveState();
+        updatePanel('Starting...');
+        runAutomation();
+    });
 }
 
 // Update panel display
@@ -201,6 +209,19 @@ function updatePanel(status = null) {
     if (keywordEl) keywordEl.textContent = isRunning ? (keywords[currentKeywordIndex] || "None") : 'Stopped';
     if (totalEl) totalEl.textContent = totalActions;
     if (statusEl && status) statusEl.textContent = status;
+
+    const startBtn = document.getElementById('auto-start-btn');
+    const stopBtn = document.getElementById('auto-stop-btn');
+
+    if (startBtn && stopBtn) {
+        if (isRunning) {
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'block';
+        } else {
+            startBtn.style.display = 'block';
+            stopBtn.style.display = 'none';
+        }
+    }
 
     if (resultsEl) {
         resultsEl.innerHTML = results.slice(-10).reverse().map(r =>
