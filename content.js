@@ -281,14 +281,18 @@ function triggerReactInput(element, value) {
         const proto = element.tagName === "TEXTAREA" ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
         const nativeInputValueSetter = Object.getOwnPropertyDescriptor(proto, "value").set;
         nativeInputValueSetter.call(element, value);
-        element.dispatchEvent(new Event('input', { bubbles: true }));
-        element.dispatchEvent(new Event('change', { bubbles: true }));
+        element.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+        element.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+        // Some React versions listen to keyup/keydown for length validations
+        element.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'a' }));
+        element.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'a' }));
     } else {
         // For contenteditable in Draft.js or lexical
         document.execCommand('selectAll', false, null);
         document.execCommand('delete', false, null);
         document.execCommand('insertText', false, value);
         element.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+        element.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, key: 'a' }));
     }
 }
 
@@ -299,19 +303,22 @@ async function handleConnect(connectBtn, name, firstName, title) {
         connectBtn.click();
         await sleep(2500);
 
+        let modal = document.querySelector('[role="dialog"]') || document.querySelector('.artdeco-modal') || document.body;
+
         // Handle possible "How do you know this person?" modal
-        const otherBtn = Array.from(document.querySelectorAll('button')).find(b => (b.innerText || '').toLowerCase().includes('other'));
+        const otherBtn = Array.from(modal.querySelectorAll('button')).find(b => (b.innerText || '').toLowerCase().includes('other'));
         if (otherBtn) {
             console.log(`[Connect] Answering 'Other' to connection prompt...`);
             otherBtn.click();
             await sleep(1000);
-            const subConnectBtn = Array.from(document.querySelectorAll('button')).find(b => (b.innerText || '').trim().toLowerCase() === 'connect');
+            const subConnectBtn = Array.from(modal.querySelectorAll('button')).find(b => (b.innerText || '').trim().toLowerCase() === 'connect');
             if (subConnectBtn) subConnectBtn.click();
             await sleep(1500);
+            modal = document.querySelector('[role="dialog"]') || document.querySelector('.artdeco-modal') || document.body;
         }
 
-        const addNoteBtn = document.querySelector('button[aria-label="Add a note"]') ||
-            Array.from(document.querySelectorAll('button')).find(b => (b.innerText || '').toLowerCase().includes('add a note'));
+        const addNoteBtn = modal.querySelector('button[aria-label="Add a note"]') ||
+            Array.from(modal.querySelectorAll('button')).find(b => (b.innerText || '').toLowerCase().includes('add a note') || (b.innerText || '').toLowerCase().includes('add note'));
 
         let generatedMessage = "Fallback";
 
@@ -320,7 +327,7 @@ async function handleConnect(connectBtn, name, firstName, title) {
             addNoteBtn.click();
             await sleep(1500);
 
-            const textarea = document.querySelector('textarea[name="message"], textarea#custom-message') || document.querySelector('textarea');
+            const textarea = modal.querySelector('textarea[name="message"], textarea#custom-message') || modal.querySelector('textarea');
             if (textarea) {
                 const messageData = await getMessageTemplate(firstName, title);
                 generatedMessage = messageData.type;
@@ -329,8 +336,8 @@ async function handleConnect(connectBtn, name, firstName, title) {
                 triggerReactInput(textarea, messageData.msg);
                 await sleep(1500);
 
-                const sendBtn = document.querySelector('button[aria-label*="Send"]') ||
-                    Array.from(document.querySelectorAll('button')).find(b => {
+                const sendBtn = modal.querySelector('button[aria-label*="Send invitation"], button[aria-label*="Send"]') ||
+                    Array.from(modal.querySelectorAll('button')).find(b => {
                         const t = (b.innerText || '').trim().toLowerCase();
                         return (t.includes('send') && !t.includes('without')) || t === 'send';
                     });
@@ -338,6 +345,10 @@ async function handleConnect(connectBtn, name, firstName, title) {
                 if (sendBtn) {
                     sendBtn.removeAttribute('disabled');
                     sendBtn.click();
+                    // Additional safety
+                    const mouseEvent = new MouseEvent('click', { view: window, bubbles: true, cancelable: true });
+                    sendBtn.dispatchEvent(mouseEvent);
+
                     connectionsSent++;
                     console.log(`[Connect] Note sent successfully.`);
                     return { status: 'connected_with_note', template: generatedMessage };
@@ -349,7 +360,7 @@ async function handleConnect(connectBtn, name, firstName, title) {
             }
         } else {
             console.log(`[Connect] No 'Add a note' button. Trying to send directly...`);
-            const sendBtn = Array.from(document.querySelectorAll('button')).find(b => {
+            const sendBtn = Array.from(modal.querySelectorAll('button')).find(b => {
                 const t = (b.innerText || '').toLowerCase();
                 return t === 'send' || t === 'send now' || t.includes('send without a note') || t === 'connect';
             });
@@ -362,8 +373,8 @@ async function handleConnect(connectBtn, name, firstName, title) {
         }
 
         console.log(`[Connect] Failure trying to find final action buttons. Dismissing modal...`);
-        const closeBtn = document.querySelector('button[aria-label="Dismiss"]') ||
-            Array.from(document.querySelectorAll('button')).find(b => b.querySelector('[data-test-icon="close-medium"]'));
+        const closeBtn = modal.querySelector('button[aria-label="Dismiss"]') ||
+            Array.from(modal.querySelectorAll('button')).find(b => !!b.querySelector('[data-test-icon="close-medium"]'));
         if (closeBtn) closeBtn.click();
         return null;
     } catch (e) {
@@ -379,13 +390,16 @@ async function handleMessage(messageBtn, name, firstName, title) {
         messageBtn.click();
         await sleep(3500);
 
-        let messageBox = document.querySelector('.msg-form__contenteditable[contenteditable="true"]') ||
-            document.querySelector('.msg-form__msg-content-container [contenteditable="true"]');
+        let overlays = document.querySelectorAll('.msg-overlay-conversation-bubble');
+        let activeOverlay = overlays[overlays.length - 1] || document;
+
+        let messageBox = activeOverlay.querySelector('.msg-form__contenteditable[contenteditable="true"]') ||
+            activeOverlay.querySelector('.msg-form__msg-content-container [contenteditable="true"]');
 
         let generatedMessage = "Fallback";
 
         if (!messageBox) {
-            messageBox = Array.from(document.querySelectorAll('[contenteditable="true"]'))
+            messageBox = Array.from(activeOverlay.querySelectorAll('[contenteditable="true"]'))
                 .find(el => (el.getAttribute('aria-label') || '').toLowerCase().includes('message'));
         }
 
@@ -398,9 +412,9 @@ async function handleMessage(messageBtn, name, firstName, title) {
             triggerReactInput(messageBox, messageData.msg);
             await sleep(2000);
 
-            const sendBtn = document.querySelector('button.msg-form__send-button') ||
-                document.querySelector('button[type="submit"]') ||
-                Array.from(document.querySelectorAll('button')).find(b => {
+            const sendBtn = activeOverlay.querySelector('button.msg-form__send-button') ||
+                activeOverlay.querySelector('button[type="submit"]') ||
+                Array.from(activeOverlay.querySelectorAll('button')).find(b => {
                     const t = (b.innerText || '').trim().toLowerCase();
                     return t === 'send' || t === 'send now';
                 });
@@ -418,7 +432,7 @@ async function handleMessage(messageBtn, name, firstName, title) {
                 console.log(`[Message] Sent successfully.`);
                 await sleep(1500);
 
-                const closeBtns = document.querySelectorAll('button[aria-label="Dismiss"], .msg-overlay-bubble-header__control--close-btn');
+                const closeBtns = activeOverlay.querySelectorAll('button[aria-label="Dismiss"], .msg-overlay-bubble-header__control--close-btn');
                 if (closeBtns.length > 0) closeBtns[0].click();
 
                 return { status: 'messaged', template: generatedMessage };
@@ -429,13 +443,17 @@ async function handleMessage(messageBtn, name, firstName, title) {
                 messageBox.dispatchEvent(enterEvent);
                 messagesSent++;
                 await sleep(1500);
+
+                const closeBtns = activeOverlay.querySelectorAll('button[aria-label="Dismiss"], .msg-overlay-bubble-header__control--close-btn');
+                if (closeBtns.length > 0) closeBtns[0].click();
+
                 return { status: 'messaged', template: generatedMessage + " (Enter Key)" };
             }
         } else {
             console.log(`[Message] Warning: Could not find contenteditable message box.`);
         }
 
-        const closeBtns = document.querySelectorAll('button[aria-label="Dismiss"], .msg-overlay-bubble-header__control--close-btn');
+        const closeBtns = activeOverlay.querySelectorAll('button[aria-label="Dismiss"], .msg-overlay-bubble-header__control--close-btn');
         if (closeBtns.length > 0) closeBtns[0].click();
         return null;
     } catch (e) {
